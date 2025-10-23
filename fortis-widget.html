@@ -1,8 +1,94 @@
-<!doctype html><html><body style="margin:0">
-<div class="tradingview-widget-container" style="width:100%;max-width:420px;margin:auto">
-  <div class="tradingview-widget-container__widget"></div>
-  <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-ticker.js" async>
-  {"symbol":"NSE:FORTIS","width":"100%","locale":"en","isTransparent":true,"colorTheme":"light","showSymbolLogo":true}
-  </script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fortis Healthcare Stock Price (NSE & BSE)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      margin: 40px;
+      text-align: center;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      width: 280px;
+      text-align: left;
+    }
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .price {
+      font-size: 26px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .up { color: green; }
+    .down { color: red; }
+    .small { font-size: 12px; color: gray; }
+  </style>
+</head>
+<body>
+
+<h2>Fortis Healthcare Live Stock Price</h2>
+<p class="small">(via Yahoo Finance, auto-updates every 30s)</p>
+
+<div class="container">
+  <div class="card">
+    <div class="title">FORTIS.NS (NSE)</div>
+    <div>Price: <span id="nse-price">Loading...</span></div>
+    <div>Change: <span id="nse-change">-</span></div>
+  </div>
+
+  <div class="card">
+    <div class="title">FORTIS.BO (BSE)</div>
+    <div>Price: <span id="bse-price">Loading...</span></div>
+    <div>Change: <span id="bse-change">-</span></div>
+  </div>
 </div>
-</body></html>
+
+<script>
+  async function fetchStock(symbol, priceId, changeId) {
+    const proxy = "https://api.allorigins.win/get?url=";
+    const url = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`);
+    try {
+      const res = await fetch(proxy + url);
+      const json = await res.json();
+      const data = JSON.parse(json.contents);
+      const meta = data.chart.result[0].meta;
+      const price = meta.regularMarketPrice;
+      const prev = meta.chartPreviousClose;
+      const change = (price - prev).toFixed(2);
+      const percent = ((change / prev) * 100).toFixed(2);
+      document.getElementById(priceId).innerText = "₹ " + price.toFixed(2);
+      const changeEl = document.getElementById(changeId);
+      changeEl.innerText = `${change > 0 ? "+" : ""}${change} (${percent}%)`;
+      changeEl.className = change > 0 ? "up" : "down";
+    } catch (err) {
+      document.getElementById(priceId).innerText = "Error";
+      document.getElementById(changeId).innerText = "Error";
+    }
+  }
+
+  function updatePrices() {
+    fetchStock("FORTIS.NS", "nse-price", "nse-change");
+    fetchStock("FORTIS.BO", "bse-price", "bse-change");
+  }
+
+  updatePrices();
+  setInterval(updatePrices, 30000); // auto-refresh every 30 seconds
+</script>
+
+</body>
+</html>
